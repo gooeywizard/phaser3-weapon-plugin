@@ -1,4 +1,5 @@
 /**
+ * @author       GooeyWizard
  * @author       Patrick Sletvold
  * @author       jdotr <https://github.com/jdotrjs>
  * @author       Richard Davey
@@ -307,7 +308,7 @@ class Weapon {
      * @type {Phaser.Geom.Rectangle}
      * @private
      */
-    this.bulletBounds = this.scene.physics.world.bounds;
+    this.bulletBounds = this.getWorldBounds();
 
     /**
      * This array stores the frames added via @link #setBulletFrames.
@@ -983,8 +984,10 @@ class Weapon {
         bullet.data.bodyDirty = false;
       }
 
-      bullet.body.setVelocity(moveX, moveY);
-      bullet.body.setGravity(this.bulletGravity.x, this.bulletGravity.y);
+      // bullet.body.setVelocity(moveX, moveY);
+      console.log(moveX, moveY);
+      Phaser.Physics.Matter.Matter.Body.setVelocity(bullet.body, {x: moveX/100, y: moveY/100});
+      // bullet.body.setGravity(this.bulletGravity.x, this.bulletGravity.y);
 
       let next = 0;
 
@@ -1225,6 +1228,20 @@ class Weapon {
 
     this.bullets.destroy(true);
   }
+
+  getWorldBounds() {
+    let bounds;
+
+    if(this.scene.physics) {
+      bounds = this.scene.physics.world.bounds;
+    } else if(this.scene.impact) {
+      // TODO make work with impact physics
+    } else if(this.scene.matter) {
+      bounds = this.scene.matter.world.localWorld.bounds;
+    }
+
+    return bounds;
+  }
 }
 
 /**
@@ -1248,7 +1265,7 @@ Object.defineProperty(Weapon.prototype, 'bulletClass', {
     if (this.bullets) {
       this.bullets.classType = this._bulletClass;
     }
-  },
+  }
 });
 
 /**
@@ -1300,7 +1317,7 @@ Object.defineProperty(Weapon.prototype, 'bulletKillType', {
         break;
 
       case consts.KILL_WORLD_BOUNDS:
-        this.bulletBounds = this.scene.physics.world.bounds;
+        this.bulletBounds = this.getWorldBounds();
         break;
     }
 

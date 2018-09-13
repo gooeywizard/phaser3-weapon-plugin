@@ -1,4 +1,5 @@
 /**
+ * @author       GooeyWizard
  * @author       Patrick Sletvold
  * @author       jdotr <https://github.com/jdotrjs>
  * @author       Richard Davey
@@ -26,7 +27,7 @@ class Bullet extends Phaser.GameObjects.Sprite {
     super(scene, x, y, key, frame);
     this.bulletID = bulletID;
     bulletID++;
-    this.scene.physics.add.existing(this);
+    this.createBody();
 
     this.data = {
       timeEvent: null,
@@ -49,7 +50,13 @@ class Bullet extends Phaser.GameObjects.Sprite {
     this.setActive(true);
     this.setVisible(true);
     this.body.enable = true;
-    this.body.reset(x, y);
+    // this.body.reset(x, y);
+    console.log(x, y);
+    Phaser.Physics.Matter.Matter.Body.setPosition(this.body, {x: x, y: y});
+    this.body.isSensor = true;
+    this.body.frictionAir = 0;
+
+    
     this.body.debugShowBody = this.data.bulletManager.debugPhysics;
     this.body.debugShowVelocity = this.data.bulletManager.debugPhysics;
   }
@@ -62,7 +69,7 @@ class Bullet extends Phaser.GameObjects.Sprite {
   kill() {
     // Reproduce Phaser.Physics.Arcade.Components.Enable.disableBody because
     // we can't assume that the bullet class has it built in.
-    this.body.stop();
+    // this.body.stop();
     this.body.enable = false;
     this.setActive(false);
     this.setVisible(false);
@@ -95,6 +102,8 @@ class Bullet extends Phaser.GameObjects.Sprite {
       return;
     }
 
+    console.log(this.data.bulletManager.bulletBounds, this.body.bounds);
+
     if (this.data.killType > consts.KILL_LIFESPAN) {
       if (this.data.killType === consts.KILL_DISTANCE) {
         if (
@@ -104,10 +113,14 @@ class Bullet extends Phaser.GameObjects.Sprite {
           this.kill();
         }
       } else if (
-        !Phaser.Geom.Intersects.RectangleToRectangle(
+        !Phaser.Physics.Matter.Matter.Bounds.overlaps(
           this.data.bulletManager.bulletBounds,
-          this.body.getBounds(this.data.bodyBounds)
+          this.body.bounds
         )
+        // !Phaser.Geom.Intersects.RectangleToRectangle(
+        //   this.data.bulletManager.bulletBounds,
+        //   this.body.bounds
+        // )
       ) {
         this.kill();
       }
@@ -118,7 +131,17 @@ class Bullet extends Phaser.GameObjects.Sprite {
     }
 
     if (this.data.bulletManager.bulletWorldWrap) {
-      this.scene.physics.world.wrap(this, this.data.bulletManager.bulletWorldWrapPadding);
+      this.scene.matter.world.wrap(this, this.data.bulletManager.bulletWorldWrapPadding);
+    }
+  }
+
+  createBody() {
+    if(this.scene.physics) {
+      this.scene.physics.add.existing(this);
+    } else if(this.scene.impact) {
+      // TODO make work with impact physics
+    } else if(this.scene.matter) {
+      this.scene.matter.add.gameObject(this);
     }
   }
 }

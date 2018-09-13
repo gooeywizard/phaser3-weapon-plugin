@@ -1,4 +1,5 @@
 /**
+ * @author       GooeyWizard
  * @author       Patrick Sletvold
  * @author       jdotr <https://github.com/jdotrjs>
  * @author       Richard Davey
