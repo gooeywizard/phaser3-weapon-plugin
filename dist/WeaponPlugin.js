@@ -299,15 +299,18 @@ function (_Phaser$GameObjects$S) {
     value: function prepare(x, y) {
       this.setActive(true);
       this.setVisible(true);
-      this.body.enable = true; // this.body.reset(x, y);
+      this.body.enable = true;
 
-      console.log(x, y);
-      Phaser.Physics.Matter.Matter.Body.setPosition(this.body, {
-        x: x,
-        y: y
-      });
-      this.body.isSensor = true;
-      this.body.frictionAir = 0;
+      if (this.scene.physics) {
+        this.body.reset(x, y);
+      } else if (this.scene.impact) {// do something 'impact'ful
+      } else if (this.scene.matter) {
+        Phaser.Physics.Matter.Matter.Body.setPosition(this.body, {
+          x: x,
+          y: y
+        });
+      }
+
       this.body.debugShowBody = this.data.bulletManager.debugPhysics;
       this.body.debugShowVelocity = this.data.bulletManager.debugPhysics;
     }
@@ -355,20 +358,14 @@ function (_Phaser$GameObjects$S) {
         return;
       }
 
-      console.log(this.data.bulletManager.bulletBounds, this.body.bounds);
-
       if (this.data.killType > __WEBPACK_IMPORTED_MODULE_0__consts__["a" /* default */].KILL_LIFESPAN) {
         if (this.data.killType === __WEBPACK_IMPORTED_MODULE_0__consts__["a" /* default */].KILL_DISTANCE) {
           if (new Phaser.Math.Vector2(this.data.fromX, this.data.fromY).distance(this) > this.data.killDistance) {
             this.kill();
           }
-        } else if (!Phaser.Physics.Matter.Matter.Bounds.overlaps(this.data.bulletManager.bulletBounds, this.body.bounds) // !Phaser.Geom.Intersects.RectangleToRectangle(
-        //   this.data.bulletManager.bulletBounds,
-        //   this.body.bounds
-        // )
-        ) {
-            this.kill();
-          }
+        } else if (this.isOutsideBounds()) {
+          this.kill();
+        }
       }
 
       if (this.data.rotateToVelocity) {
@@ -380,6 +377,16 @@ function (_Phaser$GameObjects$S) {
       }
     }
   }, {
+    key: "isOutsideBounds",
+    value: function isOutsideBounds() {
+      if (this.scene.physics) {
+        return !Phaser.Geom.Intersects.RectangleToRectangle(this.data.bulletManager.bulletBounds, this.body.getBounds(this.data.bodyBounds));
+      } else if (this.scene.impact) {// TODO impact
+      } else if (this.scene.matter) {
+        return !Phaser.Physics.Matter.Matter.Bounds.overlaps(this.data.bulletManager.bulletBounds, this.body.bounds);
+      }
+    }
+  }, {
     key: "createBody",
     value: function createBody() {
       if (this.scene.physics) {
@@ -387,6 +394,8 @@ function (_Phaser$GameObjects$S) {
       } else if (this.scene.impact) {// TODO make work with impact physics
       } else if (this.scene.matter) {
         this.scene.matter.add.gameObject(this);
+        this.body.isSensor = true;
+        this.body.frictionAir = 0;
       }
     }
   }]);
@@ -1499,6 +1508,11 @@ function () {
 
       if (this.bulletSpeedVariance !== 0) {
         speed += Phaser.Math.Between(-this.bulletSpeedVariance, this.bulletSpeedVariance);
+      } // MatterJS needs the speed scaled down
+
+
+      if (this.scene.matter) {
+        speed = speed / 100;
       }
 
       if (from) {
@@ -1629,14 +1643,18 @@ function () {
 
           bullet.body.collideWorldBounds = this.bulletCollideWorldBounds;
           bullet.data.bodyDirty = false;
-        } // bullet.body.setVelocity(moveX, moveY);
+        }
 
-
-        console.log(moveX, moveY);
-        Phaser.Physics.Matter.Matter.Body.setVelocity(bullet.body, {
-          x: moveX / 100,
-          y: moveY / 100
-        }); // bullet.body.setGravity(this.bulletGravity.x, this.bulletGravity.y);
+        if (this.scene.physics) {
+          bullet.body.setVelocity(moveX, moveY);
+          bullet.body.setGravity(this.bulletGravity.x, this.bulletGravity.y);
+        } else if (this.scene.impact) {// TODO impact
+        } else if (this.scene.matter) {
+          Phaser.Physics.Matter.Matter.Body.setVelocity(bullet.body, {
+            x: moveX,
+            y: moveY
+          });
+        }
 
         var next = 0;
 

@@ -837,6 +837,11 @@ class Weapon {
       speed += Phaser.Math.Between(-this.bulletSpeedVariance, this.bulletSpeedVariance);
     }
 
+    // MatterJS needs the speed scaled down
+    if(this.scene.matter) {
+      speed = speed / 100;
+    }
+
     if (from) {
       if (this.fireFrom.width > 1) {
         this.fireFrom.CenterOn(from.x, from.y);
@@ -984,10 +989,14 @@ class Weapon {
         bullet.data.bodyDirty = false;
       }
 
-      // bullet.body.setVelocity(moveX, moveY);
-      console.log(moveX, moveY);
-      Phaser.Physics.Matter.Matter.Body.setVelocity(bullet.body, {x: moveX/100, y: moveY/100});
-      // bullet.body.setGravity(this.bulletGravity.x, this.bulletGravity.y);
+      if(this.scene.physics) {
+        bullet.body.setVelocity(moveX, moveY);
+        bullet.body.setGravity(this.bulletGravity.x, this.bulletGravity.y);
+      } else if(this.scene.impact) {
+        // TODO impact
+      } else if(this.scene.matter) {
+        Phaser.Physics.Matter.Matter.Body.setVelocity(bullet.body, {x: moveX, y: moveY});
+      }
 
       let next = 0;
 
