@@ -612,7 +612,7 @@ class Weapon {
    * @param {boolean} [trackRotation=false] - Should the Weapon also track the Sprites rotation?
    * @return {Weapon} This Weapon instance.
    */
-  trackSprite(sprite, offsetX, offsetY, trackRotation) {
+  trackSprite(sprite, offsetX, offsetY, trackRotation, angleOffset=0) {
     if (offsetX === undefined) {
       offsetX = 0;
     }
@@ -626,6 +626,7 @@ class Weapon {
     this.trackedPointer = null;
     this.trackedSprite = sprite;
     this.trackRotation = trackRotation;
+    this.trackAngleOffset = angleOffset;
 
     this.trackOffset.set(offsetX, offsetY);
 
@@ -662,6 +663,7 @@ class Weapon {
     this.trackedPointer = pointer;
     this.trackedSprite = null;
     this.trackRotation = false;
+    this.trackAngleOffset = 0;
 
     this.trackOffset.set(offsetX, offsetY);
 
@@ -859,7 +861,7 @@ class Weapon {
           this._rotatedPoint,
           this.trackedSprite.x,
           this.trackedSprite.y,
-          this.trackedSprite.rotation
+          this.trackedSprite.rotation + Phaser.Math.DegToRad(this.trackAngleOffset)
         );
 
         if (this.fireFrom.width > 1) {
@@ -907,7 +909,7 @@ class Weapon {
     const fromX = this.fireFrom.width > 1 ? randomX : this.fireFrom.x;
     const fromY = this.fireFrom.height > 1 ? randomY : this.fireFrom.y;
 
-    let angle = this.trackRotation ? this.trackedSprite.angle : this.fireAngle;
+    let angle = this.trackRotation ? this.trackedSprite.angle + this.trackAngleOffset : this.fireAngle;
 
     //  The position (in world space) to fire the bullet towards, if set
     if (x !== null && y !== null) {

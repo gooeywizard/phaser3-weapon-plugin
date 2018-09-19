@@ -1273,6 +1273,8 @@ function () {
   }, {
     key: "trackSprite",
     value: function trackSprite(sprite, offsetX, offsetY, trackRotation) {
+      var angleOffset = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 0;
+
       if (offsetX === undefined) {
         offsetX = 0;
       }
@@ -1288,6 +1290,7 @@ function () {
       this.trackedPointer = null;
       this.trackedSprite = sprite;
       this.trackRotation = trackRotation;
+      this.trackAngleOffset = angleOffset;
       this.trackOffset.set(offsetX, offsetY);
       return this;
     }
@@ -1326,6 +1329,7 @@ function () {
       this.trackedPointer = pointer;
       this.trackedSprite = null;
       this.trackRotation = false;
+      this.trackAngleOffset = 0;
       this.trackOffset.set(offsetX, offsetY);
       return this;
     }
@@ -1526,7 +1530,7 @@ function () {
         if (this.trackRotation) {
           this._rotatedPoint.set(this.trackedSprite.x + this.trackOffset.x, this.trackedSprite.y + this.trackOffset.y);
 
-          Phaser.Math.RotateAround(this._rotatedPoint, this.trackedSprite.x, this.trackedSprite.y, this.trackedSprite.rotation);
+          Phaser.Math.RotateAround(this._rotatedPoint, this.trackedSprite.x, this.trackedSprite.y, this.trackedSprite.rotation + Phaser.Math.DegToRad(this.trackAngleOffset));
 
           if (this.fireFrom.width > 1) {
             this.fireFrom.CenterOn(this._rotatedPoint.x, this._rotatedPoint.y);
@@ -1565,7 +1569,7 @@ function () {
       var randomY = this.fireFrom.y + Math.random() * this.fireFrom.height;
       var fromX = this.fireFrom.width > 1 ? randomX : this.fireFrom.x;
       var fromY = this.fireFrom.height > 1 ? randomY : this.fireFrom.y;
-      var angle = this.trackRotation ? this.trackedSprite.angle : this.fireAngle; //  The position (in world space) to fire the bullet towards, if set
+      var angle = this.trackRotation ? this.trackedSprite.angle + this.trackAngleOffset : this.fireAngle; //  The position (in world space) to fire the bullet towards, if set
 
       if (x !== null && y !== null) {
         angle = Phaser.Math.RadToDeg(Math.atan2(y - fromY, x - fromX));
